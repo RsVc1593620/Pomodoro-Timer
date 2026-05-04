@@ -1,14 +1,19 @@
 import sys
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout
+    QApplication,
+    QWidget,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
+    QHBoxLayout,
 )
 from PyQt6.QtCore import QTimer, Qt
 from qt_material import apply_stylesheet
 from circular_timer import CircularTimer
 
-
 WORK_TIME = 25 * 60
 BREAK_TIME = 5 * 60
+
 
 class PomodoroApp(QWidget):
     def __init__(self):
@@ -47,9 +52,7 @@ class PomodoroApp(QWidget):
         btn_layout.addWidget(self.reset_btn)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.timer_widget,
-                         alignment=Qt.AlignmentFlag.AlignCenter
-                         )
+        layout.addWidget(self.timer_widget, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.status)
         layout.addLayout(btn_layout)
 
@@ -63,29 +66,24 @@ class PomodoroApp(QWidget):
             self.switch_mode()
 
     def update_display(self):
-        mins, secs = divmod(
-            self.time_left,
-            60
-        )
+        mins, secs = divmod(self.time_left, 60)
 
-        self.timer_widget.set_time(
-            f"{mins:02d}:{secs:02d}"
-        )
+        self.timer_widget.set_time(f"{mins:02d}:{secs:02d}")
 
         if self.is_work:
             total = WORK_TIME
         else:
             total = BREAK_TIME
 
-        progress = (
-            self.time_left / total
-        ) * 100
+        progress = (self.time_left / total) * 100
 
-        self.timer_widget.set_progress(
-            progress
-        )
+        self.timer_widget.set_progress(progress)
 
     def switch_mode(self):
+        QApplication.beep
+        self.show()
+        self.raise_()
+        self.activateWindow()
         self.timer.stop()
         self.is_running = False
 
@@ -116,9 +114,10 @@ class PomodoroApp(QWidget):
         self.status.setText("Work")
         self.update_display()
 
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    apply_stylesheet(app, theme='dark_teal.xml', invert_secondary=True)
+    apply_stylesheet(app, theme="dark_teal.xml", invert_secondary=True)
     window = PomodoroApp()
     window.show()
     sys.exit(app.exec())
