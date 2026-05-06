@@ -12,9 +12,17 @@ from PyQt6.QtCore import QUrl
 from PyQt6.QtMultimedia import QSoundEffect
 from qt_material import apply_stylesheet
 from circular_timer import CircularTimer
+from PyQt6.QtGui import QIcon
+import ctypes
+
+myappid = "stelian.pomodoro.timer.1.0"
+
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+    myappid
+)
 
 WORK_TIME = 25 * 60
-BREAK_TIME = 5 * 60
+BREAK_TIME = 10 * 60
 
 
 class PomodoroApp(QWidget):
@@ -22,6 +30,9 @@ class PomodoroApp(QWidget):
         super().__init__()
 
         self.setWindowTitle("Pomodoro Timer")
+        self.setWindowIcon(
+            QIcon("assets/icon.png")
+        )
         self.setFixedSize(300, 260)
 
         self.time_left = WORK_TIME
