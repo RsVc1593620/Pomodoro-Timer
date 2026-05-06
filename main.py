@@ -8,6 +8,8 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
 )
 from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtCore import QUrl
+from PyQt6.QtMultimedia import QSoundEffect
 from qt_material import apply_stylesheet
 from circular_timer import CircularTimer
 
@@ -32,6 +34,14 @@ class PomodoroApp(QWidget):
         self.timer.timeout.connect(self.update_timer)
 
     def init_ui(self):
+        self.sound = QSoundEffect()
+        self.sound.setSource(
+            QUrl.fromLocalFile(
+                "assets/ding.wav"
+            )
+        )
+
+        self.sound.setVolume(0.8)
         self.timer_widget = CircularTimer()
 
         self.status = QLabel("Work")
@@ -80,7 +90,7 @@ class PomodoroApp(QWidget):
         self.timer_widget.set_progress(progress)
 
     def switch_mode(self):
-        QApplication.beep
+        self.sound.play()
         self.show()
         self.raise_()
         self.activateWindow()
