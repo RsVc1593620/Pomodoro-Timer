@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QHBoxLayout,
+    QSystemTrayIcon,
+    QMenu,
 )
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtCore import QUrl
@@ -21,7 +23,7 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
     myappid
 )
 
-WORK_TIME = 25 * 60
+WORK_TIME = 30 * 60
 BREAK_TIME = 10 * 60
 
 
@@ -40,6 +42,7 @@ class PomodoroApp(QWidget):
         self.is_work = True
 
         self.init_ui()
+        self.setup_tray()
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_timer)
@@ -78,6 +81,62 @@ class PomodoroApp(QWidget):
         layout.addLayout(btn_layout)
 
         self.setLayout(layout)
+
+    def setup_tray(self):
+
+        self.tray = QSystemTrayIcon(self)
+
+        self.tray.setIcon(
+            QIcon("assets/icon.png")
+        )
+
+        menu = QMenu()
+
+        start_action = menu.addAction("Start")
+        pause_action = menu.addAction("Pause")
+        reset_action = menu.addAction("Reset")
+
+        menu.addSeparator()
+
+        exit_action = menu.addAction("Exit")
+
+        start_action.triggered.connect(
+            self.start
+        )
+
+        pause_action.triggered.connect(
+            self.pause
+        )
+
+        reset_action.triggered.connect(
+            self.reset
+        )
+
+        exit_action.triggered.connect(
+            self.quit_app
+        )
+
+        self.tray.activated.connect(
+            self.toggle_window
+        )
+
+        self.tray.setContextMenu(menu)
+
+        self.tray.show()
+
+    def quit_app(self):
+
+        self.tray.hide()
+
+        QApplication.quit()
+
+    def toggle_window(self):
+
+        if self.isVisible():
+            self.hide()
+
+        else:
+            self.show()
 
     def update_timer(self):
         if self.time_left > 0:
@@ -135,6 +194,16 @@ class PomodoroApp(QWidget):
         self.status.setText("Work")
         self.update_display()
 
+    def closeEvent(self, event):
+        
+        event.ignore()
+
+        self.hide()
+
+        self.tray.showMessage(
+            "Pomodoro Timer",
+            "Application minimized to tray."
+        )
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
