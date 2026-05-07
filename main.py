@@ -16,12 +16,13 @@ from qt_material import apply_stylesheet
 from circular_timer import CircularTimer
 from PyQt6.QtGui import QIcon
 import ctypes
+import platform
 
-myappid = "stelian.pomodoro.timer.1.0"
+if platform.system() == "Windows":
 
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-    myappid
-)
+    myappid = "stelian.pomodoro.timer.1.0"
+
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 WORK_TIME = 30 * 60
 BREAK_TIME = 10 * 60
@@ -32,9 +33,7 @@ class PomodoroApp(QWidget):
         super().__init__()
 
         self.setWindowTitle("Pomodoro Timer")
-        self.setWindowIcon(
-            QIcon("assets/icon.png")
-        )
+        self.setWindowIcon(QIcon("assets/icon.png"))
         self.setFixedSize(300, 260)
 
         self.time_left = WORK_TIME
@@ -49,11 +48,7 @@ class PomodoroApp(QWidget):
 
     def init_ui(self):
         self.sound = QSoundEffect()
-        self.sound.setSource(
-            QUrl.fromLocalFile(
-                "assets/ding.wav"
-            )
-        )
+        self.sound.setSource(QUrl.fromLocalFile("assets/ding.wav"))
 
         self.sound.setVolume(0.8)
         self.timer_widget = CircularTimer()
@@ -86,9 +81,7 @@ class PomodoroApp(QWidget):
 
         self.tray = QSystemTrayIcon(self)
 
-        self.tray.setIcon(
-            QIcon("assets/icon.png")
-        )
+        self.tray.setIcon(QIcon("assets/icon.png"))
 
         menu = QMenu()
 
@@ -100,25 +93,15 @@ class PomodoroApp(QWidget):
 
         exit_action = menu.addAction("Exit")
 
-        start_action.triggered.connect(
-            self.start
-        )
+        start_action.triggered.connect(self.start)
 
-        pause_action.triggered.connect(
-            self.pause
-        )
+        pause_action.triggered.connect(self.pause)
 
-        reset_action.triggered.connect(
-            self.reset
-        )
+        reset_action.triggered.connect(self.reset)
 
-        exit_action.triggered.connect(
-            self.quit_app
-        )
+        exit_action.triggered.connect(self.quit_app)
 
-        self.tray.activated.connect(
-            self.toggle_window
-        )
+        self.tray.activated.connect(self.toggle_window)
 
         self.tray.setContextMenu(menu)
 
@@ -195,15 +178,13 @@ class PomodoroApp(QWidget):
         self.update_display()
 
     def closeEvent(self, event):
-        
+
         event.ignore()
 
         self.hide()
 
-        self.tray.showMessage(
-            "Pomodoro Timer",
-            "Application minimized to tray."
-        )
+        self.tray.showMessage("Pomodoro Timer", "Application minimized to tray.")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
