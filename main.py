@@ -24,7 +24,7 @@ if platform.system() == "Windows":
 
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-WORK_TIME = 30 * 60
+WORK_TIME = 50 * 60
 BREAK_TIME = 10 * 60
 
 

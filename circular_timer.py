@@ -9,7 +9,7 @@ class CircularTimer(QWidget):
         super().__init__()
 
         self.progress = 100
-        self.minutes = "30:00"
+        self.minutes = "50:00"
 
         self.setFixedSize(180, 180)
 
