@@ -1,4 +1,8 @@
+import os
 import sys
+import ctypes
+import platform
+
 from PyQt6.QtWidgets import (
     QApplication,
     QWidget,
@@ -9,23 +13,31 @@ from PyQt6.QtWidgets import (
     QSystemTrayIcon,
     QMenu,
 )
-from PyQt6.QtCore import QTimer, Qt
-from PyQt6.QtCore import QUrl
+
+from PyQt6.QtCore import QTimer, Qt, QUrl
 from PyQt6.QtMultimedia import QSoundEffect
+from PyQt6.QtGui import QIcon
+
 from qt_material import apply_stylesheet
 from circular_timer import CircularTimer
-from PyQt6.QtGui import QIcon
-import ctypes
-import platform
+
 
 if platform.system() == "Windows":
-
     myappid = "stelian.pomodoro.timer.1.0"
-
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
 
 WORK_TIME = 50 * 60
 BREAK_TIME = 10 * 60
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class PomodoroApp(QWidget):
@@ -33,7 +45,7 @@ class PomodoroApp(QWidget):
         super().__init__()
 
         self.setWindowTitle("Pomodoro Timer")
-        self.setWindowIcon(QIcon("assets/icon.png"))
+        self.setWindowIcon(QIcon(resource_path("assets/icon.png")))
         self.setFixedSize(300, 260)
 
         self.time_left = WORK_TIME
@@ -46,11 +58,16 @@ class PomodoroApp(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_timer)
 
-    def init_ui(self):
-        self.sound = QSoundEffect()
-        self.sound.setSource(QUrl.fromLocalFile("assets/ding.wav"))
+        self.update_display()
 
+    def init_ui(self):
+
+        self.sound = QSoundEffect()
+        self.sound.setSource(
+            QUrl.fromLocalFile(resource_path("assets/ding.wav"))
+        )
         self.sound.setVolume(0.8)
+
         self.timer_widget = CircularTimer()
 
         self.status = QLabel("Work")
@@ -71,7 +88,10 @@ class PomodoroApp(QWidget):
         btn_layout.addWidget(self.reset_btn)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.timer_widget, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(
+            self.timer_widget,
+            alignment=Qt.AlignmentFlag.AlignCenter
+        )
         layout.addWidget(self.status)
         layout.addLayout(btn_layout)
 
@@ -81,7 +101,9 @@ class PomodoroApp(QWidget):
 
         self.tray = QSystemTrayIcon(self)
 
-        self.tray.setIcon(QIcon("assets/icon.png"))
+        icon = QIcon(resource_path("assets/icon.png"))
+
+        self.tray.setIcon(icon)
 
         menu = QMenu()
 
@@ -94,9 +116,7 @@ class PomodoroApp(QWidget):
         exit_action = menu.addAction("Exit")
 
         start_action.triggered.connect(self.start)
-
         pause_action.triggered.connect(self.pause)
-
         reset_action.triggered.connect(self.reset)
 
         exit_action.triggered.connect(self.quit_app)
@@ -113,68 +133,95 @@ class PomodoroApp(QWidget):
 
         QApplication.quit()
 
-    def toggle_window(self):
+    # IMPORTANT:
+    # activated trimite parametrul reason
+    def toggle_window(self, reason):
 
-        if self.isVisible():
-            self.hide()
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
 
-        else:
-            self.show()
+            if self.isVisible():
+                self.hide()
+
+            else:
+                self.show()
+                self.raise_()
+                self.activateWindow()
 
     def update_timer(self):
+
         if self.time_left > 0:
+
             self.time_left -= 1
+
             self.update_display()
+
         else:
+
             self.switch_mode()
 
     def update_display(self):
+
         mins, secs = divmod(self.time_left, 60)
 
         self.timer_widget.set_time(f"{mins:02d}:{secs:02d}")
 
-        if self.is_work:
-            total = WORK_TIME
-        else:
-            total = BREAK_TIME
+        total = WORK_TIME if self.is_work else BREAK_TIME
 
         progress = (self.time_left / total) * 100
 
         self.timer_widget.set_progress(progress)
 
     def switch_mode(self):
+
         self.sound.play()
+
         self.show()
         self.raise_()
         self.activateWindow()
+
         self.timer.stop()
         self.is_running = False
 
         if self.is_work:
+
             self.time_left = BREAK_TIME
             self.status.setText("Break")
+
         else:
+
             self.time_left = WORK_TIME
             self.status.setText("Work")
 
         self.is_work = not self.is_work
+
         self.update_display()
 
     def start(self):
+
         if not self.is_running:
+
             self.timer.start(1000)
+
             self.is_running = True
 
     def pause(self):
+
         self.timer.stop()
+
         self.is_running = False
 
     def reset(self):
+
         self.timer.stop()
+
         self.is_running = False
+
         self.is_work = True
+
         self.time_left = WORK_TIME
+
         self.status.setText("Work")
+
         self.update_display()
 
     def closeEvent(self, event):
@@ -183,12 +230,27 @@ class PomodoroApp(QWidget):
 
         self.hide()
 
-        self.tray.showMessage("Pomodoro Timer", "Application minimized to tray.")
+        self.tray.showMessage(
+            "Pomodoro Timer",
+            "Application minimized to tray."
+        )
 
 
 if __name__ == "__main__":
+
     app = QApplication(sys.argv)
-    apply_stylesheet(app, theme="dark_teal.xml", invert_secondary=True)
+
+    # CRITIC pentru system tray
+    app.setQuitOnLastWindowClosed(False)
+
+    apply_stylesheet(
+        app,
+        theme="dark_teal.xml",
+        invert_secondary=True
+    )
+
     window = PomodoroApp()
+
     window.show()
+
     sys.exit(app.exec())
